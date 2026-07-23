@@ -1,0 +1,22 @@
+manifestVersion: 1
+
+name: "@sntxrr/tailscale-acl-drift"
+version: "2026.07.20.1"
+description: "Read-only drift detection for GitOps-managed Tailscale ACLs. Extends @john/tailscale-acl with a `drift` method that compares the live tailnet policy against a policy.hujson file, ignoring comments and key ordering. Never writes to the tailnet — the GitOps pipeline stays the sole writer."
+repository: "https://github.com/sntxrr/swamp-tailscale"
+
+paths:
+  base: manifest
+
+models:
+  - tailscale_acl_drift.ts
+
+additionalFiles:
+  - README.md
+  - LICENSE.md
+
+labels:
+  - tailscale
+  - acl
+  - gitops
+  - drift

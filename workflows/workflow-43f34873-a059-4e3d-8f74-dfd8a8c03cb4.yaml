@@ -1,0 +1,48 @@
+id: 43f34873-a059-4e3d-8f74-dfd8a8c03cb4
+name: acl-drift-check
+description: >-
+  Snapshot the live tailnet ACL policy, then compare it against the GitOps
+  policy.hujson. Read-only — never writes to the tailnet.
+tags: {}
+inputs:
+  properties:
+    policyPath:
+      type: string
+      description: Absolute path to the GitOps policy.hujson file
+  required:
+    - policyPath
+jobs:
+  - name: snapshot
+    description: Fetch the ACL policy currently live on the tailnet
+    steps:
+      - name: get-live-acl
+        description: Write a snapshot of the live policy for comparison
+        task:
+          type: model_method
+          modelIdOrName: homelab-acl
+          methodName: get
+        dependsOn: []
+        weight: 0
+        allowFailure: false
+    dependsOn: []
+    weight: 0
+  - name: compare
+    description: Compare the live snapshot against the policy file
+    steps:
+      - name: detect-drift
+        description: Report any semantic divergence between tailnet and git
+        task:
+          type: model_method
+          modelIdOrName: homelab-acl
+          methodName: drift
+          inputs:
+            policyPath: ${{ inputs.policyPath }}
+        dependsOn: []
+        weight: 0
+        allowFailure: false
+    dependsOn:
+      - job: snapshot
+        condition:
+          type: succeeded
+    weight: 0
+version: 1
