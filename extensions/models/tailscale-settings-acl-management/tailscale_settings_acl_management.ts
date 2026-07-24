@@ -8,9 +8,11 @@
  * without changing anything. This method sends it explicitly and then verifies
  * the value actually changed, failing loudly if it did not.
  *
- * Note: Tailscale documents external ACL management as advisory — it surfaces
- * a warning in the admin console rather than blocking edits. Enforcement of
- * who may edit ACLs is done through user roles.
+ * Note: on the current admin console this setting is enforcing, not advisory.
+ * With it on, the console shows the policy as "managed externally and locked in
+ * the editor" and blocks edits there; changes must go through the API/GitOps.
+ * (Tailscale's older GitOps blog post describes it as a mere warning — the live
+ * console behaviour is stricter, verified directly against the console.)
  *
  * @module
  */
@@ -80,7 +82,9 @@ async function readSettings(
   token: string,
 ): Promise<Record<string, unknown>> {
   const base = g.baseUrl ?? "https://api.tailscale.com";
-  const url = `${base}/api/v2/tailnet/${encodeURIComponent(g.tailnet)}/settings`;
+  const url = `${base}/api/v2/tailnet/${
+    encodeURIComponent(g.tailnet)
+  }/settings`;
   const resp = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -92,6 +96,7 @@ async function readSettings(
   return await resp.json();
 }
 
+/** Extension adding the verified `setExternalAclManagement` method. */
 export const extension = {
   type: "@john/tailscale-settings",
 
@@ -99,7 +104,7 @@ export const extension = {
     {
       setExternalAclManagement: {
         description:
-          "Set aclsExternallyManagedOn, then verify the change took effect. Advisory in Tailscale — surfaces a console warning rather than blocking edits.",
+          "Set aclsExternallyManagedOn, then verify the change took effect. When on, the admin console locks the policy editor — edits must go through the API/GitOps.",
         arguments: z.object({
           enabled: z
             .boolean()

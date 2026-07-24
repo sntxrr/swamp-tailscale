@@ -97,7 +97,9 @@ export function parseHujson(source: string): Json {
 
     if (ch === "/" && next === "*") {
       i += 2;
-      while (i < source.length && !(source[i] === "*" && source[i + 1] === "/")) {
+      while (
+        i < source.length && !(source[i] === "*" && source[i + 1] === "/")
+      ) {
         i++;
       }
       i++;
@@ -234,7 +236,7 @@ export const extension = {
             ) => Promise<unknown>;
             logger: {
               info: (msg: string, props?: Record<string, unknown>) => void;
-              warning: (msg: string, props?: Record<string, unknown>) => void;
+              warn: (msg: string, props?: Record<string, unknown>) => void;
             };
           },
         ): Promise<{ dataHandles: unknown[] }> => {
@@ -295,7 +297,7 @@ export const extension = {
               path: args.policyPath,
             });
           } else {
-            context.logger.warning("ACL drift detected: {summary}", {
+            context.logger.warn("ACL drift detected: {summary}", {
               summary,
             });
           }

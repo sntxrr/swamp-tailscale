@@ -1,7 +1,7 @@
 manifestVersion: 1
 
 name: "@sntxrr/tailscale-external-acl-management"
-version: "2026.07.20.1"
+version: "2026.07.24.1"
 description: "Sets aclsExternallyManagedOn on a Tailscale tailnet and verifies the change applied. The base @john/tailscale-settings update method strips this field via its zod schema and sends an empty PATCH, reporting success without changing anything; this method sends it explicitly and asserts the read-back value."
 repository: "https://github.com/sntxrr/swamp-tailscale"
 
@@ -12,6 +12,7 @@ models:
   - tailscale_settings_acl_management.ts
 
 additionalFiles:
+  - README.md
   - LICENSE.md
 
 labels:
