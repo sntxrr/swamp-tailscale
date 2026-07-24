@@ -51,5 +51,34 @@
     "checksum": "9248815426b4a6b4bc95604cb2eb5dae7aeb36103c0e9b57a01b321cb6545c0f",
     "filesChecksum": "d0a8b396a33b0d6e4e845be9a7efbcbd23d639b01fadd598ac38b464d34cff6d",
     "serverUrl": "https://swamp-club.com"
+  },
+  "@twonines/git-workspace": {
+    "version": "2026.07.22.1",
+    "pulledAt": "2026-07-24T21:00:10.754Z",
+    "files": [
+      ".swamp/pulled-extensions/@twonines/git-workspace/models/mod.ts",
+      ".swamp/bundles/3214ae4f/mod.js",
+      ".swamp/pulled-extensions/@twonines/git-workspace/files/LICENSE.md",
+      ".swamp/pulled-extensions/@twonines/git-workspace/files/README.md",
+      ".swamp/pulled-extensions/@twonines/git-workspace/manifest.yaml"
+    ],
+    "checksum": "12a8c2fb861e891558ec2ee2321247d42b6562b964f25858c3d8b0adacabb2d8",
+    "filesChecksum": "c6612a21d6af26c2064d2686b847b8b4cd1995fe9e83699f305eac7cc2619e83",
+    "serverUrl": "https://swamp-club.com"
+  },
+  "@goodcraft/github": {
+    "version": "2026.06.14.1",
+    "pulledAt": "2026-07-24T21:00:14.264Z",
+    "files": [
+      ".swamp/pulled-extensions/@goodcraft/github/models/github.ts",
+      ".swamp/pulled-extensions/@goodcraft/github/models/_lib/github_plan.ts",
+      ".swamp/bundles/3226b448/github.js",
+      ".swamp/pulled-extensions/@goodcraft/github/files/README.md",
+      ".swamp/pulled-extensions/@goodcraft/github/files/LICENSE.txt",
+      ".swamp/pulled-extensions/@goodcraft/github/manifest.yaml"
+    ],
+    "checksum": "b1d40899ab75069e15fa6731354eac650ee085dc8b036b0ca2b8f647b6a9c718",
+    "filesChecksum": "a2ecf9df0715f7f73e80687ce559745b044febee75e3c60a0491d63cda836ae9",
+    "serverUrl": "https://swamp-club.com"
   }
 }

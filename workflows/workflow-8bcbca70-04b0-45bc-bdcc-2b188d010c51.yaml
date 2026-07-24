@@ -1,0 +1,192 @@
+id: 8bcbca70-04b0-45bc-bdcc-2b188d010c51
+name: propose-acl
+description: >-
+  Stage a Tailscale ACL change as a reviewable pull request against the GitOps
+  policy repo. Snapshots the live tailnet, writes the proposed policy.hujson
+  (verbatim — comments preserved), commits it on a branch, pushes, and opens a
+  PR. Never writes to the tailnet: merging the PR lets the GitOps action apply
+  the policy, keeping it the single writer.
+tags: {}
+inputs:
+  properties:
+    sourcePath:
+      type: string
+      description: >-
+        Absolute path to the proposed policy.hujson text to stage. May be an
+        edited copy of the repo's policy.hujson or the in-repo file itself.
+    branch:
+      type: string
+      description: Feature branch name to create and open the PR from.
+    repoPath:
+      type: string
+      description: >-
+        Local directory for the GitOps repo checkout. Use a dedicated path (not
+        an unrelated working copy) — `ensure` clones here if empty, or fetches +
+        pulls if it already holds this repo.
+    project:
+      type: string
+      description: owner/repo of the GitOps ACL repository.
+      default: sntxrr/tailscale-acls
+    repo:
+      type: string
+      description: Repository name (owner is the github model's global arg).
+      default: tailscale-acls
+    base:
+      type: string
+      description: Base branch the PR targets.
+      default: main
+    dryRun:
+      type: boolean
+      description: >-
+        When true (default), openPr plans without creating the PR. The branch is
+        still committed and pushed; only PR creation is gated.
+      default: true
+  required:
+    - sourcePath
+    - branch
+    - repoPath
+jobs:
+  - name: snapshot
+    description: Fetch the ACL policy currently live on the tailnet
+    steps:
+      - name: get-live-acl
+        description: Write a snapshot of the live policy for the proposal diff
+        task:
+          type: model_method
+          modelIdOrName: homelab-acl
+          methodName: get
+        dependsOn: []
+        weight: 0
+        allowFailure: false
+    dependsOn: []
+    weight: 0
+  - name: checkout
+    description: Ensure the GitOps repo is cloned locally and up to date
+    steps:
+      - name: ensure-repo
+        description: Clone or fast-forward the ACL policy repository
+        task:
+          type: model_method
+          modelIdOrName: acl-repo
+          methodName: ensure
+          inputs:
+            project: ${{ inputs.project }}
+            localPath: ${{ inputs.repoPath }}
+        dependsOn: []
+        weight: 0
+        allowFailure: false
+    dependsOn: []
+    weight: 0
+  - name: branch
+    description: Create the feature branch for the proposal
+    steps:
+      - name: make-branch
+        description: Switch to (or create) the proposal branch
+        task:
+          type: model_method
+          modelIdOrName: acl-repo
+          methodName: branch
+          inputs:
+            project: ${{ inputs.project }}
+            branch: ${{ inputs.branch }}
+            localPath: ${{ inputs.repoPath }}
+        dependsOn: []
+        weight: 0
+        allowFailure: false
+    dependsOn:
+      - job: checkout
+        condition:
+          type: succeeded
+    weight: 0
+  - name: stage
+    description: Write the proposed policy and produce the PR metadata
+    steps:
+      - name: stage-proposal
+        description: Validate + write policy.hujson verbatim and diff vs live
+        task:
+          type: model_method
+          modelIdOrName: homelab-acl
+          methodName: propose
+          inputs:
+            sourcePath: ${{ inputs.sourcePath }}
+            targetPath: ${{ inputs.repoPath }}/policy.hujson
+            liveInstance: current
+        dependsOn: []
+        weight: 0
+        allowFailure: false
+    dependsOn:
+      - job: snapshot
+        condition:
+          type: succeeded
+      - job: branch
+        condition:
+          type: succeeded
+    weight: 0
+  - name: commit
+    description: Commit the staged policy on the feature branch
+    steps:
+      - name: commit-proposal
+        description: Stage policy.hujson and commit with the generated message
+        task:
+          type: model_method
+          modelIdOrName: acl-repo
+          methodName: commit
+          inputs:
+            project: ${{ inputs.project }}
+            localPath: ${{ inputs.repoPath }}
+            files:
+              - policy.hujson
+            message: ${{ data.latest('homelab-acl', 'proposal').attributes.commitMessage }}
+        dependsOn: []
+        weight: 0
+        allowFailure: false
+    dependsOn:
+      - job: stage
+        condition:
+          type: succeeded
+    weight: 0
+  - name: publish
+    description: Push the branch to the remote
+    steps:
+      - name: push-branch
+        description: Push the feature branch with upstream tracking
+        task:
+          type: model_method
+          modelIdOrName: acl-repo
+          methodName: push
+          inputs:
+            project: ${{ inputs.project }}
+            localPath: ${{ inputs.repoPath }}
+        dependsOn: []
+        weight: 0
+        allowFailure: false
+    dependsOn:
+      - job: commit
+        condition:
+          type: succeeded
+    weight: 0
+  - name: pull-request
+    description: Open the pull request (dry-run unless dryRun=false)
+    steps:
+      - name: open-pr
+        description: Open a PR from the proposal branch into the base branch
+        task:
+          type: model_method
+          modelIdOrName: acl-github
+          methodName: openPr
+          inputs:
+            repo: ${{ inputs.repo }}
+            head: ${{ inputs.branch }}
+            base: ${{ inputs.base }}
+            title: ${{ data.latest('homelab-acl', 'proposal').attributes.prTitle }}
+            body: ${{ data.latest('homelab-acl', 'proposal').attributes.prBody }}
+            dryRun: ${{ inputs.dryRun }}
+        dependsOn: []
+        weight: 0
+        allowFailure: false
+    dependsOn:
+      - job: publish
+        condition:
+          type: succeeded
+    weight: 0
+version: 1

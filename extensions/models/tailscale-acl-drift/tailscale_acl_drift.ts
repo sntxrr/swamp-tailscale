@@ -49,7 +49,9 @@ const DriftSchema = z.object({
 });
 
 /** Parsed JSON value produced by the HuJSON reader. */
-type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
+export type Json = null | boolean | number | string | Json[] | {
+  [k: string]: Json;
+};
 
 /**
  * Strip comments and trailing commas from HuJSON (JWCC) and parse it as JSON.

@@ -1,10 +1,16 @@
 # @sntxrr/tailscale-acl-drift
 
-Read-only drift detection for GitOps-managed Tailscale ACL policies.
+Drift detection and change proposal for GitOps-managed Tailscale ACL policies.
 
-Extends [`@john/tailscale-acl`](https://swamp-club.com) with a single `drift`
-method that compares the policy currently live on your tailnet against the
-`policy.hujson` file in your GitOps repository.
+Extends [`@john/tailscale-acl`](https://swamp-club.com) with two methods:
+
+- **`drift`** — compares the policy currently live on your tailnet against the
+  `policy.hujson` file in your GitOps repository.
+- **`propose`** — stages an ACL change as a reviewable pull request against that
+  file.
+
+Neither method ever writes to the tailnet: your GitOps pipeline stays the sole
+writer (see [Why read-only](#why-read-only)).
 
 ## Why read-only
 
@@ -82,6 +88,47 @@ Writes a `drift` resource:
 `state` is one of `only-live` (present on the tailnet but not in git),
 `only-file` (in git but not yet applied), or `changed`.
 
+## Proposing changes
+
+`propose` is the write-side counterpart to `drift`, and it upholds the same
+single-writer rule: it writes a **file** and stages a **pull request** — it
+never touches the Tailscale API. Applying the policy remains the job of the
+GitOps action that runs on merge.
+
+It takes the proposed policy as **HuJSON text** and writes it to disk
+byte-for-byte — it never re-serializes a parsed object, so comments and
+formatting survive. It parses the text only to (a) reject invalid HuJSON before
+staging and (b) diff the proposal against the live tailnet for the PR body.
+
+```bash
+swamp model @john/tailscale-acl method run get my-tailnet
+swamp model @john/tailscale-acl method run propose my-tailnet \
+  --input sourcePath=/absolute/path/to/edited-policy.hujson \
+  --input targetPath=/absolute/path/to/checkout/policy.hujson
+```
+
+End to end — snapshot, branch, write, commit, push, and open a PR — use the
+`propose-acl` workflow, which chains this method with
+[`@twonines/git-workspace`](https://swamp-club.com) (git) and
+[`@goodcraft/github`](https://swamp-club.com) (PR). See the repo root README for
+the workflow walkthrough and required credentials.
+
+### `propose` arguments
+
+| Argument       | Required | Default     | Description                                                    |
+| -------------- | -------- | ----------- | -------------------------------------------------------------- |
+| `sourcePath`   | yes      | —           | Absolute path to read the proposed `policy.hujson` text from   |
+| `targetPath`   | yes      | —           | Absolute path to write (inside the checkout that gets committed) |
+| `liveInstance` | no       | `"current"` | Instance name of the snapshot `get` wrote                      |
+| `title`        | no       | (generated) | Pull-request title override                                    |
+
+### `propose` output
+
+Writes a `proposal` resource carrying `changed`, per-section `differences` (vs
+the live tailnet, with `state` of `only-live` / `only-proposed` / `changed`),
+`commentsPresent`, and the generated `prTitle`, `prBody`, and `commitMessage`
+that the workflow feeds into the commit and PR.
+
 ## HuJSON handling
 
 Tailscale policy files are HuJSON — JSON with comments and trailing commas.
@@ -92,7 +139,11 @@ inside string values (URLs, for instance) are not mistaken for comments.
 
 - `@john/tailscale-acl` installed (`swamp extension pull @john/tailscale`)
 - Tailscale OAuth client credentials wired into that model's global arguments
-- Read access to the local policy file
+- Read access to the local policy file (`drift`); read + write to the checkout
+  (`propose`)
+- For the `propose-acl` workflow only: `@twonines/git-workspace` and
+  `@goodcraft/github` installed, plus a GitHub token vault and push access to
+  the ACL repo
 
 ## License
 
