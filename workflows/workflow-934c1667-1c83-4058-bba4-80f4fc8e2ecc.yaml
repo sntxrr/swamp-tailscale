@@ -1,9 +1,9 @@
 id: 934c1667-1c83-4058-bba4-80f4fc8e2ecc
 name: acl-drift-watch
 description: >-
-  Scheduled, unattended version of acl-drift-check: pull the GitOps policy repo,
-  snapshot the live tailnet ACL, compare them, and raise an Apprise notification
-  when they diverge.
+  Scheduled, unattended version of acl-drift-check: fetch the GitOps policy
+  file, snapshot the live tailnet ACL, compare them, and raise an Apprise
+  notification when they diverge.
 
   The point is the single-writer invariant. ACLs are applied by
   tailscale/gitops-acl-action on merge, so anything edited straight into the
@@ -15,36 +15,46 @@ description: >-
   policy_file:read, so this cannot become a second writer even if the workflow
   is wrong -- the boundary is the credential, not this file.
 tags: {}
-# Deliberately has NO trigger, for the same reason the sibling propose-acl takes
-# `repoPath` as a required input rather than defaulting it: the checkout
-# directory is operator-specific, and a schedule has nowhere to supply one
-# without baking a single operator's home directory into a shared workflow.
+# Fetches the policy file over the GitHub API (`gh api`) rather than cloning the
+# repo over SSH. That is not a style preference -- an hourly unattended job must
+# not depend on an interactive credential. The original `git ensure` step
+# authenticated through the 1Password SSH agent, which enumerates keys from cron
+# but refuses to SIGN with them, because cron runs outside the GUI session where
+# 1Password can prompt for approval. It failed for 19 consecutive hours on
+# 2026-07-31/08-01, each run burning the full 60s agent timeout, and the tailnet
+# went unwatched the entire time. Comparison only ever needed policy.hujson, not
+# a working tree, so the clone was buying nothing that justified that fragility.
 #
-# A trigger would not have fired anyway -- triggers only run under `swamp serve`,
-# nothing serves this repo, and the container has no GitHub SSH key for `ensure`
-# to clone with. Run it hourly from cron instead:
+# Deliberately has NO trigger, for the same reason the sibling propose-acl takes
+# a path as a required input rather than defaulting it: the destination is
+# operator-specific, and a schedule has nowhere to supply one without baking a
+# single operator's home directory into a shared workflow. A trigger would not
+# have fired anyway -- triggers only run under `swamp serve`, and nothing serves
+# this repo. Run it hourly from cron instead:
 #
 #   swamp workflow run acl-drift-watch --repo-dir <repo> \
-#     --input repoPath=<dedicated checkout directory>
+#     --input policyPath=<destination file>
 #
-# Hourly is plenty: ACL edits are rare and each run is two cheap API calls plus
-# a git fetch, so the cadence only bounds how long an out-of-band change can sit
-# unnoticed.
+# Hourly is plenty: ACL edits are rare and each run is three cheap API calls, so
+# the cadence only bounds how long an out-of-band change can sit unnoticed.
 inputs:
   properties:
-    project:
+    repo:
       type: string
       description: owner/repo of the GitOps ACL repository.
       default: sntxrr/tailscale-acls
-    repoPath:
+    ref:
+      type: string
+      description: Branch or ref to read the policy file from.
+      default: main
+    policyPath:
       type: string
       description: >-
-        Local directory for the GitOps repo checkout. Use a dedicated path, NOT
-        your working copy -- `ensure` fetches and pulls here, which will fight
-        any uncommitted edits you have in flight. Required rather than
-        defaulted: a default would be one operator's absolute home path, which
-        is both wrong for everyone else and not something a shared repo should
-        carry.
+        Local file path to materialize policy.hujson at. Use a dedicated path,
+        NOT a file in your working copy -- `sync` overwrites it whenever the
+        upstream blob SHA changes. Required rather than defaulted: a default
+        would be one operator's absolute home path, which is both wrong for
+        everyone else and not something a shared repo should carry.
     notify:
       type: boolean
       description: >-
@@ -52,20 +62,27 @@ inputs:
         you already know the tailnet is out of sync and don't want the ping.
       default: true
   required:
-    - repoPath
+    - policyPath
 jobs:
-  - name: checkout
-    description: Ensure the GitOps repo is cloned locally and up to date
+  - name: fetch
+    description: Materialize the GitOps policy file from GitHub
     steps:
-      - name: ensure-repo
-        description: Clone or fast-forward the ACL policy repository
+      - name: fetch-policy
+        description: >-
+          Pull policy.hujson via the GitHub API, rewriting the local copy only
+          when the upstream blob SHA moved. Read-only against the repository:
+          this cannot become a second ACL writer even if it is wrong.
         task:
           type: model_method
-          modelIdOrName: acl-repo
-          methodName: ensure
+          modelIdOrName: acl-policy-file
+          methodName: sync
           inputs:
-            project: ${{ inputs.project }}
-            localPath: ${{ inputs.repoPath }}
+            targets:
+              - repo: ${{ inputs.repo }}
+                ref: ${{ inputs.ref }}
+                srcPath: policy.hujson
+                destPath: ${{ inputs.policyPath }}
+                label: tailnet-acl-policy
         dependsOn: []
         weight: 0
         allowFailure: false
@@ -95,13 +112,13 @@ jobs:
           modelIdOrName: homelab-acl
           methodName: drift
           inputs:
-            policyPath: ${{ inputs.repoPath }}/policy.hujson
+            policyPath: ${{ inputs.policyPath }}
             liveInstance: current
         dependsOn: []
         weight: 0
         allowFailure: false
     dependsOn:
-      - job: checkout
+      - job: fetch
         condition:
           type: succeeded
       - job: snapshot
