@@ -102,3 +102,21 @@ client) and are gitignored.
 ## License
 
 MIT — see each extension's `LICENSE.md`.
+
+## Where the implementation lives
+
+This repo is **extension source only** — the reusable artifact published to
+swamp club. The model instances, vaults and workflows that actually run live in
+`~/git/swamp-homelab`, which mounts this repo upstream:
+
+```bash
+swamp extension source add ~/git/swamp-extensions/tailscale/extensions/models/tailscale-acl-drift
+swamp extension source add ~/git/swamp-extensions/tailscale/extensions/models/tailscale-settings-acl-management
+```
+
+Note the **subdirectory** paths: this repo holds two extensions, and mounting
+the repo root resolves neither.
+
+The `acl-drift-watch`, `acl-drift-check` and `propose-acl` workflows moved there
+on 2026-08-07 — they name model instances (`homelab-acl`, `acl-policy-file`)
+that exist only in one operator's repo.
