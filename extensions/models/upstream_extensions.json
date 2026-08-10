@@ -94,5 +94,40 @@
     "checksum": "dce8c8d0cbf79924d155cab3e63f77bad7c4cbf1d644cf600b1d3b276131c448",
     "filesChecksum": "eed46da2ff0d309f84018f72f9e3e593d1415946593935e2a846937d6a29f513",
     "serverUrl": "https://swamp-club.com"
+  },
+  "@mgreten/github-file-track": {
+    "version": "2026.07.16.1",
+    "pulledAt": "2026-08-01T17:18:57.167Z",
+    "files": [
+      ".swamp/pulled-extensions/@mgreten/github-file-track/models/github_file_track.ts",
+      ".swamp/bundles/5c919130/github_file_track.js",
+      ".swamp/pulled-extensions/@mgreten/github-file-track/files/README.md",
+      ".swamp/pulled-extensions/@mgreten/github-file-track/files/LICENSE.txt",
+      ".swamp/pulled-extensions/@mgreten/github-file-track/manifest.yaml"
+    ],
+    "checksum": "fe1a26b2a14ca5ad8a42253adf25b76ca63591cbc6177ea52822390788f39cfa",
+    "filesChecksum": "9d51f80218edf60c7c572131ba72f806b16b0870a59de10793009184e2f348ca",
+    "serverUrl": "https://swamp-club.com"
+  },
+  "@swamp/s3-datastore": {
+    "version": "2026.07.31.1",
+    "pulledAt": "2026-08-01T18:25:46.413Z",
+    "files": [
+      ".swamp/pulled-extensions/@swamp/s3-datastore/datastores/s3.ts",
+      ".swamp/pulled-extensions/@swamp/s3-datastore/datastores/_lib/atomic_write.ts",
+      ".swamp/pulled-extensions/@swamp/s3-datastore/datastores/_lib/s3_cache_sync.ts",
+      ".swamp/pulled-extensions/@swamp/s3-datastore/datastores/_lib/s3_verifier.ts",
+      ".swamp/pulled-extensions/@swamp/s3-datastore/datastores/_lib/s3_client.ts",
+      ".swamp/pulled-extensions/@swamp/s3-datastore/datastores/_lib/tracing.ts",
+      ".swamp/pulled-extensions/@swamp/s3-datastore/datastores/_lib/interfaces.ts",
+      ".swamp/pulled-extensions/@swamp/s3-datastore/datastores/_lib/s3_lock.ts",
+      ".swamp/datastore-bundles/7c811b12/s3.js",
+      ".swamp/pulled-extensions/@swamp/s3-datastore/files/README.md",
+      ".swamp/pulled-extensions/@swamp/s3-datastore/files/LICENSE.txt",
+      ".swamp/pulled-extensions/@swamp/s3-datastore/manifest.yaml"
+    ],
+    "checksum": "d16d76f669038b5c96dc9e72a604746138b730daf9c5a4f47e9afb3907eebb43",
+    "filesChecksum": "12b3cdfa1cd4eff01d3d9cf082ef6a2d54940dbc0ed7eada2b693b006da89449",
+    "serverUrl": "https://swamp-club.com"
   }
 }
