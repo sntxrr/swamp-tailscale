@@ -9,7 +9,7 @@
  */
 
 import { assertEquals, assertRejects, assertThrows } from "jsr:@std/assert@1";
-import { createModelTestContext } from "jsr:@swamp-club/swamp-testing";
+import { createModelTestContext } from "jsr:@swamp-club/swamp-testing@0.20260928.39";
 import {
   canonicalize,
   comparePolicies,

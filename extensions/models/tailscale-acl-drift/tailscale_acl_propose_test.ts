@@ -9,7 +9,7 @@
  */
 
 import { assertEquals, assertRejects, assertStringIncludes } from "jsr:@std/assert@1";
-import { createModelTestContext } from "jsr:@swamp-club/swamp-testing";
+import { createModelTestContext } from "jsr:@swamp-club/swamp-testing@0.20260928.39";
 import { extension } from "./tailscale_acl_propose.ts";
 
 /** The propose method's execute function under test. */
