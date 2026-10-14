@@ -1,8 +1,9 @@
 manifestVersion: 1
 
 name: "@sntxrr/tailscale-acl-drift"
-version: "2026.07.24.2"
+version: "2026.10.14.1"
 description: "Drift detection and change proposal for GitOps-managed Tailscale ACLs. Extends @john/tailscale-acl with `drift` (compare the live tailnet policy against a policy.hujson file, ignoring comments and key ordering) and `propose` (stage an ACL change as a reviewable pull request, writing HuJSON verbatim so comments survive). Neither method writes to the tailnet — the GitOps pipeline stays the sole writer."
+license: MIT
 repository: "https://github.com/sntxrr/swamp-tailscale"
 
 paths:

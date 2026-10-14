@@ -90,6 +90,7 @@ function renderChangeList(
     .join("\n");
 }
 
+/** Extension adding the `propose` method to `@john/tailscale-acl`; it never writes to the tailnet. */
 export const extension = {
   type: "@john/tailscale-acl",
 
