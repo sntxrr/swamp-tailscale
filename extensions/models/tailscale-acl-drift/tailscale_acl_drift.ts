@@ -193,6 +193,7 @@ export function comparePolicies(
   return differences;
 }
 
+/** Extension adding the read-only `drift` method to `@john/tailscale-acl`. */
 export const extension = {
   type: "@john/tailscale-acl",
 
